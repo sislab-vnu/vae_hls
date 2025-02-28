@@ -33,49 +33,37 @@ def update_weights(model):
         ]
 
     update_weights_in_model(model, w_fxp_dict)
+def write_file(fname, data):
+    with open(fname, 'w') as f:
+        f.write('# Array shape: {0}\n'.format(data.shape))
+        if len(data.shape) > 2:
+            kernel_h, kernel_w, input_channels, output_channels = data.shape
+            for o in range(0,output_channels):
+                for i in range(0,input_channels):
+                    np.savetxt(f, data[:,:,i,o], fmt='%-7.8f')
+                    f.write('# New slice: input_channel=%d output_channel=%d\n' %(i,o))
+        else:
+            np.savetxt(f, data, fmt='%-7.8f')
+    f.close()
+    
 def dump_weights(model):
-    w_dict = {}
     for l in model.layers:
         if hasattr(l, 'layers'):
             print("Sub layers exist")
         else:
-            weight = l.get_weights()
-            if len(weight) > 0:
-                w_dict[l.name] = {"weights": weight[0], "bias": weight[1]}
-            else:
-                w_dict[l.name] = {"weights": None, "bias": None}
-    for key in w_dict:
-        if w_dict[key]['weights'] is not None:
-            data = w_dict[key]['weights']
-            with open(key + '.txt', 'w') as f:
-                f.write('# Array shape: {0}\n'.format(data.shape))
-                if len(data.shape) > 2:
-                    for data_slice in data:
-                        for s in data_slice:
-                            np.savetxt(f, s, fmt='%-7.8f')
-                            f.write('# New slice\n')
-                        f.write('# Up\n')
-                else:
-                    np.savetxt(f, data, fmt='%-7.8f')
+            d = l.get_weights()
+            if len(d) > 0:
+                print(l.name, len(d))
+                weights = d[0]
+                bias = d[1]
+                write_file("_".join([l.name, "_weights.txt"]), weights)
+                write_file("_".join([l.name, "_bias.txt"]), bias)
+                
+                
     
 def quantize_model(encoder_file, decoder_file):
     vae = load_model_from_files(encoder_file, decoder_file)
     vae.compile()
-    # # w_dict = {}
-    # # for l in vae.encoder.layers:
-    # #     if hasattr(l, 'layers'):
-    # #         print(l.layers)
-    # #     else:
-    # #         weight = l.get_weights()
-    # #         if len(weight) > 0:
-    # #             w_dict[l.name] = {"weights": weight[0], "bias": weight[1]}
-    # #         else:
-    # #             w_dict[l.name] = {"weights": None, "bias": None}
-    # # print(w_dict)
-    # update_weights(vae.encoder)
-    # update_weights(vae.decoder)
-    # vae.encoder.save('vae_encoder_quantized.h5')
-    # vae.decoder.save('vae_encoder_quantized.h5')
     dump_weights(vae.encoder)
 
 if __name__ == "__main__":
