@@ -15,3 +15,7 @@ test: $(fp_models)
 quantize:
 	export PYTHONPATH=$(PWD)/src
 	./venv/bin/python3 src/quantize_model.py ./vae_encoder_float.h5 ./vae_decoder_float.h5
+hls:
+	make -c src/hls/kernel hls
+bitstream:
+	make -c src/hls/overlay vae.bit
