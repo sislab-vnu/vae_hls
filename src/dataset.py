@@ -38,13 +38,13 @@ def get_dataset(dataset_path):
     x_hole = get_subset_fixed_point(os.path.join(dataset_path, 'test', 'hole', '*.png'), 'hole')
     x_print = get_subset_fixed_point(os.path.join(dataset_path, 'test', 'print', '*.png'), 'print')
     
-    print(f"x_train shape: {x_train.shape}")
-    print(f"x_good sample fixed-point values:\n{x_good[0]}")
-    # Kiểm tra kích thước của x_good
-    print(f"x_good shape: {x_good.shape}")
-
     x_all = np.vstack((x_train, x_good, x_crack, x_cut, x_hole, x_print))
 
-    # Shuffle dữ liệu
-    x_all = x_all[np.random.permutation(len(x_all))]
-    return x_all
+    np.random.shuffle(x_all)
+
+    split_ratio = 0.8
+    split_idx = int(len(x_all) * split_ratio)
+
+    x_train_new = x_all[:split_idx]
+    x_test = x_all[split_idx:]
+    return x_train_new, x_test,x_good,x_cut,x_train,x_hole,x_print
